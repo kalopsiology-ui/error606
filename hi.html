@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>A letter for you</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@800&family=Noto+Sans+Tagalog&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b2a1f; --bg2:#15463a; --ink:#e4f2e9;
+  --paper:#fbf8f0; --paper-ink:#2a2118; --line:rgba(138,90,59,.2);
+  --env:#8a5a3b; --env-dark:#6a4229; --env-flap:#a26b47;
+  --seal:#d9a441; --seal-ink:#2b1a0e;
+  color-scheme:dark;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{
+  background:radial-gradient(120% 90% at 50% 20%,var(--bg2),var(--bg) 70%);
+  color:var(--ink); font-family:'Syne',system-ui,sans-serif; overflow:hidden;
+  display:grid; place-items:center; touch-action:manipulation;
+}
+.stage{perspective:1100px; width:min(86vw,420px); aspect-ratio:7/5; position:relative}
+.env{
+  position:absolute; inset:0;
+  transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
+  transition:transform .25s ease-out, opacity .6s ease;
+  animation:float 5s ease-in-out infinite;
+}
+@keyframes float{50%{translate:0 -10px}}
+.env>*{position:absolute; inset:0}
+
+/* layers, back to front: back(0) < sheet(1) < pocket(2) < flap(3) */
+.back{background:var(--env-dark); border-radius:14px; box-shadow:0 30px 60px -20px rgba(0,0,0,.6); z-index:0}
+.sheet{
+  z-index:1; background:var(--paper); border-radius:8px; inset:8% 7% auto 7%; height:80%;
+  box-shadow:0 2px 8px rgba(0,0,0,.2);
+  transition:transform .9s cubic-bezier(.2,.8,.2,1) .5s;
+}
+.pocket{
+  z-index:2; background:var(--env); border-radius:14px;
+  clip-path:polygon(0 0,50% 52%,100% 0,100% 100%,0 100%);
+}
+.flap{
+  z-index:3; inset:0 0 auto 0; height:56%; background:var(--env-flap);
+  clip-path:polygon(0 0,100% 0,50% 100%); border-radius:14px 14px 0 0;
+  transform-origin:top; transform:perspective(700px) rotateX(0deg);
+  transition:transform .7s cubic-bezier(.5,0,.2,1), z-index 0s .3s;
+}
+.seal-wrap{position:absolute; left:50%; top:46%; translate:-50% -50%; z-index:5; transition:opacity .35s, scale .35s}
+button{
+  font:inherit; font-weight:800; letter-spacing:.06em; font-size:clamp(15px,4.2vw,19px);
+  color:var(--seal-ink); background:var(--seal); border:0; border-radius:999px; padding:1em 1.5em;
+  cursor:pointer; box-shadow:0 8px 18px rgba(0,0,0,.4);
+  animation:pulse 2s infinite; transition:transform .15s;
+}
+button:hover{transform:scale(1.08) rotate(-2deg)}
+button:active{transform:scale(.94)}
+button:focus-visible{outline:3px solid var(--ink); outline-offset:4px}
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(217,164,65,.5),0 8px 18px rgba(0,0,0,.4)}
+  70%{box-shadow:0 0 0 22px rgba(217,164,65,0),0 8px 18px rgba(0,0,0,.4)}
+  100%{box-shadow:0 0 0 0 rgba(217,164,65,0),0 8px 18px rgba(0,0,0,.4)}
+}
+
+/* open: flap swings up and behind the paper, paper rises out of the pocket */
+.stage.open .seal-wrap{opacity:0; scale:.4; pointer-events:none}
+.stage.open .flap{transform:perspective(700px) rotateX(180deg); z-index:0}
+.stage.open .sheet{transform:translateY(-48%)}
+/* then the paper lifts in FRONT of the envelope */
+.stage.out .sheet{z-index:4; transform:translateY(-70%) scale(1.06); transition:transform .6s ease}
+.stage.read .env{opacity:0}
+/* closing: paper first sinks back down IN FRONT, then tucks into the pocket, then the flap shuts */
+.stage.closing .sheet{z-index:4; transform:translateY(-48%); transition:transform .5s ease}
+.stage.sink .sheet{transform:translateY(0); transition:transform .6s ease}
+
+.paper{
+  position:fixed; inset:0; z-index:20; display:grid; place-items:center; padding:20px;
+  background:rgba(2,14,9,.6); backdrop-filter:blur(6px); opacity:0; pointer-events:none; transition:opacity .5s;
+}
+.paper.show{opacity:1; pointer-events:auto; cursor:pointer}
+.page{
+  background:var(--paper); color:var(--paper-ink); width:min(92vw,560px); max-height:82vh; overflow:auto;
+  border-radius:10px; padding:clamp(24px,6vw,44px); transform:translateY(40px) scale(.8);
+  transition:transform .7s cubic-bezier(.2,.9,.25,1.1); box-shadow:0 40px 80px -20px rgba(0,0,0,.7);
+  font-family:'Times New Roman',Times,'Noto Sans Tagalog',serif; font-size:clamp(17px,4.4vw,20px); line-height:1.6; cursor:default;
+}
+.paper.show .page{transform:none}
+.page h1{font-weight:700; font-size:1.3em; line-height:1.3; margin-bottom:.7em}
+.page p{margin-bottom:.9em}
+.page .baybayin{font-family:'Noto Sans Tagalog',sans-serif; font-size:.9em}
+.w{opacity:0; display:inline-block; transform:translateY(6px); white-space:pre-wrap}
+.show .w{animation:in .5s forwards}
+@keyframes in{to{opacity:1;transform:none}}
+.hint{position:fixed; bottom:calc(18px + env(safe-area-inset-bottom,0px)); left:0; right:0; text-align:center; font-size:13px; color:#fff; opacity:.6}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important; transition-duration:.01s!important; transition-delay:0s!important}
+  .w{opacity:1; transform:none}
+}
+</style>
+</head>
+<body>
+
+<main class="stage" id="stage">
+  <div class="env" id="env">
+    <div class="back"></div>
+    <div class="sheet"></div>
+    <div class="pocket"></div>
+    <div class="flap"></div>
+  </div>
+  <div class="seal-wrap"><button id="btn" type="button">CLICK ME</button></div>
+</main>
+
+<div class="paper" id="paper">
+  <article class="page" id="page" onclick="event.stopPropagation()">
+    <h1>There is something in you that is a part of me.</h1>
+
+    <p>People talk about love as a simple concept, a moment of admiration, infatuation, or even the desire to be with someone. The term is so common nowadays that people cannot even distinguish between the different stages of love. Sometimes they don’t even believe in such stages–oftentimes they just wing it and call it “love”. We cannot really blame them at all, “love” is such a difficult word to define by itself. Science can explain why the heart beats, but not why it beats differently for someone.</p>
+
+    <p>There was a time where even I, myself, cannot even distinguish love between admiration. Being trapped by something that confuses me, being forced to commit to things I do not even fully understand. I thought that loving someone “unconditionally” was impossible, my mind always thought that there has to be some sort of condition that links two people together.</p>
+
+    <p>“I love you”….</p>
+
+    <p>A phrase that I hear too often being said by people around me to someone they “love” yet give it as little time as a day and the meaning will vanish. People are dumb when it comes to love, and I hate it.</p>
+
+    <p>I remember when we were in 8th grade when I first interacted with you–you’re hella stressed and even crashed out in front of me when I was collecting your paper. At that time, I did not think much of it–or maybe I did….</p>
+
+    <p>You see, that little moment of interaction has clicked something in me. I remember asking my friends what your name was. I became curious about you, which is weird because I have never felt this way before. I shrugged it back then because I thought to myself that it’s nothing of importance, maybe I was just shocked about the way you acted towards me back then.</p>
+
+    <p>When you gave me your hand during our practice for the cotillion I reacted in a way I did not expect. Sure I already had a crush on you before that incident but my reaction was very different than I expected back then. I remember the moment your soft fingers interlocked between the fingers of my palm, my head went blank. I felt something surreal that I couldn’t even explain. The tenderness of your touch made my mind turn into a blank slate that I almost spaced out during the first round of our practice.</p>
+
+    <p>I gave you the other pair of my gloves after our dance back then because my feelings for you bloomed because of your touch. My hand coming in contact with yours is what ignited my feelings towards you. I felt that day that this touch is the one I have been longing for. The warmth of your presence and the joy you brought me every time I tease you over little things is what I was dreaming for the longest time. You are the girl of my dreams, you brought colors to my dull world.</p>
+
+    <p>If Everett was right, I am sure that every fragment of me in the complex set of multiverses chose to love you. Amongst the different possibilities these universes might offer–my heart will always beat for you.</p>
+
+    <p>I have loved you since we were fifteen, and shall continue to do so until my final breath.</p>
+
+    <p>I know that life is kind of rough lately with all these college shenanigans we are currently having. But I hope that you will enjoy your day. Happy 18th birthday to you, my beloved. You truly are an amazing person and I hope that you receive more blessings as you move forward. I am always here to support you. I may not be as good as the others, but I will always try my best when it comes to you. Thank you very much for being here with me, especially during the times where I felt like I had no one. I am truly grateful for you, and I will always be.</p>
+
+    <p class="baybayin">ᜉᜇᜌᜓᜈ᜔</p>
+
+    <p class="baybayin">ᜋᜑᜎ᜔ ᜈ ᜋᜑᜎ᜔ ᜃᜒᜆ.</p>
+
+    <p>Happy 18th birthday.</p>
+  </article>
+  <div class="hint">tap outside the letter to fold it back</div>
+</div>
+
+<script>
+(function(){
+  var stage=document.getElementById('stage'), env=document.getElementById('env'),
+      btn=document.getElementById('btn'), paper=document.getElementById('paper'), page=document.getElementById('page');
+
+  // Split the letter into words for a staggered handwriting-style reveal
+  var n=0;
+  page.querySelectorAll('h1,p').forEach(function(el){
+    var parts=el.textContent.split(/(\s+)/);
+    el.textContent='';
+    parts.forEach(function(t){
+      if(!t) return;
+      var s=document.createElement('span'); s.className='w'; s.textContent=t;
+      s.style.animationDelay=(0.9+Math.min(n*0.025,14))+'s';
+      if(t.trim()) n++;
+      el.appendChild(s);
+    });
+  });
+
+  // Tilt the envelope toward the pointer
+  window.addEventListener('pointermove',function(e){
+    if(stage.classList.contains('open')) return;
+    env.style.setProperty('--ry',((e.clientX/innerWidth-.5)*22)+'deg');
+    env.style.setProperty('--rx',(-(e.clientY/innerHeight-.5)*18)+'deg');
+  });
+
+  function openIt(){
+    env.style.setProperty('--rx','0deg'); env.style.setProperty('--ry','0deg');
+    stage.classList.add('open'); btn.disabled=true;
+    setTimeout(function(){ stage.classList.add('out'); },1500);          // paper lifts in front
+    setTimeout(function(){ stage.classList.add('read'); paper.classList.add('show'); },2100);
+  }
+  function closeIt(){
+    if(stage.dataset.c) return; stage.dataset.c=1;
+    paper.classList.remove('show'); stage.classList.remove('read'); stage.classList.add('closing');
+    setTimeout(function(){ stage.classList.remove('out','closing'); stage.classList.add('sink'); page.scrollTop=0; },600);
+    setTimeout(function(){ stage.classList.remove('open','sink'); delete stage.dataset.c; btn.disabled=false; btn.focus(); },1300);
+  }
+  btn.addEventListener('click',openIt);
+  paper.addEventListener('click',closeIt);
+  addEventListener('keydown',function(e){ if(e.key==='Escape' && paper.classList.contains('show')) closeIt(); });
+})();
+</script>
+</body>
+</html>
